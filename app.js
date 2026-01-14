@@ -949,23 +949,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const guard = await dbGet('guards', guardId);
         if (!guard) return;
 
-        if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al vigilante ${guard.name}? Esta acción no se puede deshacer.`)) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al vigilante ${guard.name}? Esta acción no se puede deshacer y borrará TODOS sus horarios y reportes asociados.`)) {
             return;
         }
 
         try {
-            // Eliminar al vigilante
-            await dbDelete('guards', guardId);
+            // 1. Eliminar horarios asociados
+            globalData.schedules = globalData.schedules.filter(s => s.guardId !== guardId);
 
-            // Opcional: Podríamos eliminar también sus horarios, pero por seguridad 
-            // a veces es mejor dejarlos como huella, o simplemente el sistema los ignorará 
-            // al no existir el vigilante. Por ahora, limpiamos la lista.
+            // 2. Eliminar ausencias asociadas (tanto las reportadas por él como las asociadas a sus horarios)
+            globalData.absences = globalData.absences.filter(a => a.guardId !== guardId);
 
-            alert('Vigilante eliminado correctamente');
+            // 3. Eliminar al vigilante de la lista principal
+            globalData.guards = globalData.guards.filter(g => g.id !== guardId);
+
+            // 4. Sincronizar todos los cambios con la nube
+            await saveCloudData();
+
+            alert('Vigilante y todos sus registros asociados han sido eliminados correctamente');
             loadAdminDashboard();
         } catch (err) {
-            console.error('Error al eliminar vigilante:', err);
-            alert('No se pudo eliminar al vigilante');
+            console.error('Error al realizar la eliminación en cascada:', err);
+            alert('No se pudo completar la eliminación de todos los registros');
         }
     };
 
