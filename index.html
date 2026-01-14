@@ -32,6 +32,7 @@
             margin-bottom: 10px;
             background: linear-gradient(90deg, #00d9ff, #00ff88);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -387,6 +388,7 @@
             font-weight: 700;
             background: linear-gradient(90deg, #00d9ff, #00ff88);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
         }
@@ -414,22 +416,98 @@
             color: #00d9ff;
         }
 
+        .month-grid-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            min-width: 600px;
+            /* Asegura que el calendario no se aplaste en móviles */
+        }
+
+        .day-cell {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+        }
+
+        .day-number {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .shift-option {
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            margin-bottom: 4px;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .shift-option:hover {
+            filter: brightness(1.2);
+        }
+
+        .shift-option.selected {
+            background: #00d9ff !important;
+            color: #000 !important;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+        }
+
+        .shift-option.full {
+            opacity: 0.5;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
         @media (max-width: 768px) {
-            .schedule-grid {
-                grid-template-columns: 80px repeat(7, 1fr);
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .month-grid {
+                min-width: 500px;
                 gap: 4px;
-                font-size: 0.7rem;
             }
 
-            .schedule-cell {
-                min-height: 50px;
+            .day-cell {
+                min-height: 80px;
                 padding: 4px;
-            }
-
-            .schedule-header,
-            .schedule-shift-label {
-                padding: 8px 4px;
-                font-size: 0.7rem;
             }
         }
     </style>
@@ -493,8 +571,10 @@
             <p style="color: #888; font-size: 0.85rem; margin-bottom: 16px;">
                 Selecciona <strong>1 turno por día</strong>. Los turnos llenos aparecen en rojo. Vista del mes completo.
             </p>
-            <div id="availabilityGrid" class="schedule-grid">
-                <!-- Generado dinámicamente -->
+            <div class="month-grid-container">
+                <div id="availabilityGrid" class="month-grid">
+                    <!-- Generado dinámicamente -->
+                </div>
             </div>
             <div id="availabilityFeedback" class="feedback hidden"></div>
             <button id="submitAvailabilityBtn" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
@@ -553,8 +633,10 @@
                 <div class="week-info" id="weekInfoAdmin">Enero 2026</div>
                 <button id="nextWeekAdmin" class="btn btn-secondary">Siguiente ▶</button>
             </div>
-            <div id="weeklyScheduleGrid" class="schedule-grid">
-                <!-- Generado dinámicamente -->
+            <div class="month-grid-container">
+                <div id="weeklyScheduleGrid" class="month-grid">
+                    <!-- Generado dinámicamente -->
+                </div>
             </div>
             <button id="approveWeekBtn" class="btn btn-success" style="width: 100%; margin-top: 16px;">
                 ✓ Aprobar Cronograma del Mes

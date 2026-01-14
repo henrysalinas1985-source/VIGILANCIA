@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Espacios vacíos antes del primer día
         for (let i = 0; i < firstDay; i++) {
             const empty = document.createElement('div');
-            empty.style.minHeight = '80px';
+            empty.className = 'day-cell empty';
             grid.appendChild(empty);
         }
 
@@ -528,63 +528,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let day = 1; day <= daysInMonth; day++) {
             const dateKey = getDateKey(guardCurrentYear, guardCurrentMonth, day);
             const dayCell = document.createElement('div');
-            dayCell.style.cssText = `
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 4px;
-                min-height: 80px;
-                display: flex;
-                flex-direction: column;
-            `;
+            dayCell.className = 'day-cell';
 
             const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
             dayNumber.textContent = day;
-            dayNumber.style.cssText = 'font-weight: 600; color: #00d9ff; font-size: 0.9rem; margin-bottom: 4px;';
             dayCell.appendChild(dayNumber);
 
             // Botones de turnos
             ['shift1', 'shift2', 'shift3'].forEach((shift, idx) => {
-                const shiftBtn = document.createElement('div');
-                shiftBtn.style.cssText = `
-                    font-size: 0.65rem;
-                    padding: 4px;
-                    margin: 2px 0;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    text-align: center;
-                    transition: all 0.2s;
-                `;
+                const shiftOpt = document.createElement('div');
+                shiftOpt.className = 'shift-option';
 
+                const totalFilled = shiftCounts[dateKey][shift];
+                const isFull = totalFilled >= 1; // Máximo 1 por turno
                 const isSelected = selectedAvailability[dateKey] === shift;
-                const isFull = shiftCounts[dateKey][shift] >= 1;
 
                 if (isSelected) {
-                    shiftBtn.style.background = 'rgba(0, 217, 255, 0.3)';
-                    shiftBtn.style.border = '2px solid #00d9ff';
-                    shiftBtn.textContent = `✓ T${idx + 1}`;
+                    shiftOpt.classList.add('selected');
+                    shiftOpt.textContent = `✓ T${idx + 1}`;
                 } else if (isFull) {
-                    shiftBtn.style.background = 'rgba(255, 100, 100, 0.2)';
-                    shiftBtn.style.border = '1px solid rgba(255, 100, 100, 0.4)';
-                    shiftBtn.style.cursor = 'not-allowed';
-                    shiftBtn.textContent = `✗ T${idx + 1}`;
+                    shiftOpt.classList.add('full');
+                    shiftOpt.textContent = `✗ T${idx + 1}`;
                 } else {
-                    shiftBtn.style.background = 'rgba(0, 255, 136, 0.1)';
-                    shiftBtn.style.border = '1px solid rgba(0, 255, 136, 0.3)';
-                    shiftBtn.textContent = `○ T${idx + 1}`;
+                    shiftOpt.textContent = `○ T${idx + 1}`;
                 }
+
+                shiftOpt.title = SHIFT_TIMES[shift];
 
                 if (!isFull || isSelected) {
-                    shiftBtn.addEventListener('click', () => toggleShiftSelection(dateKey, shift));
-                    shiftBtn.addEventListener('mouseenter', () => {
-                        if (!isSelected) shiftBtn.style.transform = 'scale(1.05)';
-                    });
-                    shiftBtn.addEventListener('mouseleave', () => {
-                        shiftBtn.style.transform = 'scale(1)';
-                    });
+                    shiftOpt.addEventListener('click', () => toggleShiftSelection(dateKey, shift));
                 }
 
-                dayCell.appendChild(shiftBtn);
+                dayCell.appendChild(shiftOpt);
             });
 
             grid.appendChild(dayCell);
@@ -768,8 +744,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const grid = document.getElementById('weeklyScheduleGrid');
         grid.innerHTML = '';
-        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-        grid.style.gap = '4px';
 
         const schedules = await dbGetAll('schedules');
         const monthSchedules = schedules.filter(s =>
@@ -798,39 +772,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         for (let i = 0; i < firstDay; i++) {
             const empty = document.createElement('div');
-            empty.style.minHeight = '100px';
+            empty.className = 'day-cell empty';
             grid.appendChild(empty);
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateKey = getDateKey(adminCurrentYear, adminCurrentMonth, day);
             const dayCell = document.createElement('div');
-            dayCell.style.cssText = `
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 4px;
-                min-height: 100px;
-                display: flex;
-                flex-direction: column;
-            `;
+            dayCell.className = 'day-cell';
 
             const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
             dayNumber.textContent = day;
-            dayNumber.style.cssText = 'font-weight: 600; color: #00d9ff; font-size: 0.9rem; margin-bottom: 4px;';
             dayCell.appendChild(dayNumber);
 
             ['shift1', 'shift2', 'shift3'].forEach((shift, idx) => {
                 const assignedSchedule = monthSchedules.find(s => s.shifts[dateKey] === shift);
 
                 const shiftDiv = document.createElement('div');
-                shiftDiv.style.cssText = `
-                    font-size: 0.65rem;
-                    padding: 4px;
-                    margin: 2px 0;
-                    border-radius: 4px;
-                    text-align: center;
-                `;
+                shiftDiv.className = 'shift-option';
+                shiftDiv.style.cursor = 'default';
+                shiftDiv.style.fontSize = '0.65rem';
 
                 if (assignedSchedule) {
                     const absence = monthAbsences.find(a =>
