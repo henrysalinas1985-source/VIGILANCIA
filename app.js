@@ -274,7 +274,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     showRegisterGuardBtn.addEventListener('click', () => {
         registerGuardModal.classList.remove('hidden');
         document.getElementById('regGuardName').value = '';
-        document.getElementById('regGuardId').value = '';
         document.getElementById('regGuardPhone').value = '';
         document.getElementById('regGuardEmail').value = '';
         document.getElementById('regGuardFeedback').classList.add('hidden');
@@ -287,12 +286,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     confirmRegGuardBtn.addEventListener('click', async () => {
         const name = document.getElementById('regGuardName').value.trim();
-        const idNumber = document.getElementById('regGuardId').value.trim();
         const phone = document.getElementById('regGuardPhone').value.trim();
         const email = document.getElementById('regGuardEmail').value.trim();
 
-        if (!name || !idNumber) {
-            showFeedback(document.getElementById('regGuardFeedback'), 'Nombre y cédula son obligatorios', 'error');
+        if (!name) {
+            showFeedback(document.getElementById('regGuardFeedback'), 'El nombre es obligatorio', 'error');
             return;
         }
 
@@ -302,7 +300,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const guard = {
             id: generateId('guard'),
             name,
-            idNumber,
             phone,
             email,
             username,
@@ -906,7 +903,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.innerHTML = `
                 <div class="guard-info">
                     <div class="guard-name">${guard.name}</div>
-                    <div class="guard-details">Usuario: ${guard.username} | Cédula: ${guard.idNumber}</div>
+                    <div class="guard-details">Usuario: ${guard.username}</div>
                     <div class="guard-details">Tel: ${guard.phone || 'N/A'} | Email: ${guard.email || 'N/A'}</div>
                     ${guard.active ? '<span class="badge badge-approved">Activo</span>' : '<span class="badge badge-rejected">Inactivo</span>'}
                 </div>
