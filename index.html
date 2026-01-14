@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Turnos de Vigilancia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #00d9ff;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+            border: 1px solid rgba(255, 100, 100, 0.4);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 100, 100, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00d9ff);
+            color: #000;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            border-color: #00d9ff;
+        }
+
+        .input-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: #666;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .feedback {
+            padding: 12px;
+            border-radius: 10px;
+            margin: 16px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .feedback.error {
+            background: rgba(255, 100, 100, 0.1);
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            color: #ff6464;
+        }
+
+        .feedback.warning {
+            background: rgba(255, 200, 0, 0.1);
+            border: 1px solid rgba(255, 200, 0, 0.3);
+            color: #ffc800;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .schedule-header {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 12px 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #00d9ff;
+        }
+
+        .schedule-shift-label {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .schedule-cell {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .schedule-cell:hover {
+            transform: translateY(-2px);
+            border-color: #00d9ff;
+        }
+
+        .schedule-cell.available {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .schedule-cell.full {
+            background: rgba(255, 100, 100, 0.1);
+            border-color: rgba(255, 100, 100, 0.3);
+            cursor: not-allowed;
+        }
+
+        .schedule-cell.selected {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: #00d9ff;
+            border-width: 3px;
+        }
+
+        .schedule-cell.approved {
+            background: rgba(0, 255, 136, 0.15);
+            border-color: #00ff88;
+        }
+
+        .schedule-cell.pending {
+            background: rgba(255, 200, 0, 0.15);
+            border-color: #ffc800;
+        }
+
+        .schedule-cell.absent {
+            background: rgba(255, 100, 100, 0.15);
+            border-color: #ff6464;
+        }
+
+        .guard-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .guard-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .guard-info {
+            flex: 1;
+        }
+
+        .guard-name {
+            font-weight: 600;
+            color: #00d9ff;
+            margin-bottom: 4px;
+        }
+
+        .guard-details {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .guard-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: rgba(255, 200, 0, 0.2);
+            color: #ffc800;
+        }
+
+        .badge-approved {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .badge-rejected {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .week-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .week-selector button {
+            padding: 8px 16px;
+        }
+
+        .week-info {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00d9ff;
+        }
+
+        @media (max-width: 768px) {
+            .schedule-grid {
+                grid-template-columns: 80px repeat(7, 1fr);
+                gap: 4px;
+                font-size: 0.7rem;
+            }
+
+            .schedule-cell {
+                min-height: 50px;
+                padding: 4px;
+            }
+
+            .schedule-header,
+            .schedule-shift-label {
+                padding: 8px 4px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Pantalla de Login -->
+    <div id="loginView" class="container">
+        <h1>🛡️ Sistema de Turnos de Vigilancia</h1>
+        <p class="subtitle">Gestión inteligente de horarios</p>
+
+        <div class="card" style="max-width: 400px; margin: 0 auto;">
+            <h2>Iniciar Sesión</h2>
+            <div class="input-group">
+                <label>Usuario</label>
+                <input type="text" id="loginUsername" placeholder="Ingrese su usuario">
+            </div>
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" id="loginPassword" placeholder="Ingrese su contraseña">
+            </div>
+            <div id="loginFeedback" class="feedback hidden"></div>
+            <button id="loginBtn" class="btn btn-primary" style="width: 100%;">Ingresar</button>
+        </div>
+    </div>
+
+    <!-- Vista de Vigilante -->
+    <div id="guardView" class="container hidden">
+        <h1>🛡️ Panel de Vigilante</h1>
+        <p class="subtitle">Bienvenido, <span id="guardNameDisplay"></span></p>
+
+        <div class="btn-row" style="margin-bottom: 20px;">
+            <button id="showChangePasswordBtn" class="btn btn-primary">🔑 Cambiar Contraseña</button>
+            <button id="logoutGuardBtn" class="btn btn-secondary">Cerrar Sesión</button>
+        </div>
+
+        <!-- Estadísticas del Vigilante -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="guardTurnosThisWeek">0</div>
+                <div class="stat-label">Turnos Esta Semana</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="guardTurnosTotal">0</div>
+                <div class="stat-label">Turnos Totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="guardCoberturasDisponibles">0</div>
+                <div class="stat-label">Coberturas Disponibles</div>
+            </div>
+        </div>
+
+        <!-- Registro de Disponibilidad -->
+        <div class="card">
+            <h2>📅 Registrar Disponibilidad Mensual</h2>
+            <div class="week-selector">
+                <button id="prevWeekGuard" class="btn btn-secondary">◀ Anterior</button>
+                <div class="week-info" id="weekInfoGuard">Enero 2026</div>
+                <button id="nextWeekGuard" class="btn btn-secondary">Siguiente ▶</button>
+            </div>
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 16px;">
+                Selecciona <strong>1 turno por día</strong>. Los turnos llenos aparecen en rojo. Vista del mes completo.
+            </p>
+            <div id="availabilityGrid" class="schedule-grid">
+                <!-- Generado dinámicamente -->
+            </div>
+            <div id="availabilityFeedback" class="feedback hidden"></div>
+            <button id="submitAvailabilityBtn" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
+                Enviar Disponibilidad
+            </button>
+        </div>
+
+        <!-- Mis Turnos Aprobados -->
+        <div class="card">
+            <h2>✅ Mis Turnos Aprobados</h2>
+            <div id="myScheduleList">
+                <p style="color: #888; text-align: center;">No hay turnos aprobados aún</p>
+            </div>
+        </div>
+
+        <!-- Solicitudes de Cobertura -->
+        <div class="card">
+            <h2>🆘 Solicitudes de Cobertura</h2>
+            <div id="coverageRequestsList">
+                <p style="color: #888; text-align: center;">No hay solicitudes de cobertura</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Administrador -->
+    <div id="adminView" class="container hidden">
+        <h1>👨‍💼 Panel de Administrador</h1>
+        <p class="subtitle">Gestión completa del sistema</p>
+
+        <div class="btn-row" style="margin-bottom: 20px;">
+            <button id="showRegisterGuardBtn" class="btn btn-primary">➕ Registrar Vigilante</button>
+            <button id="logoutAdminBtn" class="btn btn-secondary">Cerrar Sesión</button>
+        </div>
+
+        <!-- Estadísticas Generales -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalGuards">0</div>
+                <div class="stat-label">Vigilantes Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingSchedules">0</div>
+                <div class="stat-label">Horarios Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="openCoverages">0</div>
+                <div class="stat-label">Coberturas Abiertas</div>
+            </div>
+        </div>
+
+        <!-- Cronograma Mensual -->
+        <div class="card">
+            <h2>📊 Cronograma Mensual</h2>
+            <div class="week-selector">
+                <button id="prevWeekAdmin" class="btn btn-secondary">◀ Anterior</button>
+                <div class="week-info" id="weekInfoAdmin">Enero 2026</div>
+                <button id="nextWeekAdmin" class="btn btn-secondary">Siguiente ▶</button>
+            </div>
+            <div id="weeklyScheduleGrid" class="schedule-grid">
+                <!-- Generado dinámicamente -->
+            </div>
+            <button id="approveWeekBtn" class="btn btn-success" style="width: 100%; margin-top: 16px;">
+                ✓ Aprobar Cronograma del Mes
+            </button>
+        </div>
+
+        <!-- Horarios Pendientes de Aprobación -->
+        <div class="card">
+            <h2>⏳ Horarios Pendientes de Aprobación</h2>
+            <div id="pendingSchedulesList">
+                <p style="color: #888; text-align: center;">No hay horarios pendientes</p>
+            </div>
+        </div>
+
+        <!-- Lista de Vigilantes -->
+        <div class="card">
+            <h2>👥 Vigilantes Registrados</h2>
+            <div id="guardsList" class="guard-list">
+                <p style="color: #888; text-align: center;">No hay vigilantes registrados</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Registrar Vigilante -->
+    <div id="registerGuardModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>➕ Registrar Nuevo Vigilante</h3>
+            <div class="input-group">
+                <label>Nombre Completo</label>
+                <input type="text" id="regGuardName" placeholder="Ej: Juan Pérez">
+            </div>
+            <div class="input-group">
+                <label>Cédula/DNI</label>
+                <input type="text" id="regGuardId" placeholder="Ej: 12345678">
+            </div>
+            <div class="input-group">
+                <label>Teléfono</label>
+                <input type="tel" id="regGuardPhone" placeholder="Ej: 555-1234">
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="regGuardEmail" placeholder="Ej: juan@ejemplo.com">
+            </div>
+            <div id="regGuardFeedback" class="feedback hidden"></div>
+            <div id="credentialsDisplay" class="feedback success hidden" style="position: relative;">
+                <strong>Credenciales generadas:</strong><br>
+                Usuario: <span id="generatedUsername"></span><br>
+                Contraseña: <span id="generatedPassword"></span><br>
+                <button id="copyCredentialsBtn" class="btn btn-secondary"
+                    style="padding: 4px 8px; font-size: 0.8rem; margin-top: 8px;">📋 Copiar Información</button><br>
+                <small>Guarda estas credenciales para compartir con el vigilante</small>
+            </div>
+            <div class="btn-row" style="margin-top: 16px;">
+                <button id="confirmRegGuardBtn" class="btn btn-success" style="flex: 1;">Guardar</button>
+                <button id="cancelRegGuardBtn" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cambiar Contraseña -->
+    <div id="changePasswordModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>🔑 Cambiar Contraseña</h3>
+            <div class="input-group">
+                <label>Contraseña Actual</label>
+                <input type="password" id="currentPassword" placeholder="Ingrese su contraseña actual">
+            </div>
+            <div class="input-group">
+                <label>Nueva Contraseña</label>
+                <input type="password" id="newPassword" placeholder="Ingrese nueva contraseña">
+            </div>
+            <div class="input-group">
+                <label>Confirmar Nueva Contraseña</label>
+                <input type="password" id="confirmPassword" placeholder="Confirme la nueva contraseña">
+            </div>
+            <div id="changePasswordFeedback" class="feedback hidden"></div>
+            <div class="btn-row" style="margin-top: 16px;">
+                <button id="confirmChangePasswordBtn" class="btn btn-success" style="flex: 1;">Cambiar</button>
+                <button id="cancelChangePasswordBtn" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Marcar Ausencia -->
+    <div id="absenceModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>🚫 Marcar Ausencia</h3>
+            <div id="absenceInfo" style="margin-bottom: 16px; color: #aaa; font-size: 0.9rem;"></div>
+            <div class="input-group">
+                <label>Seleccionar Turno</label>
+                <select id="absenceShiftSelector" class="form-select"></select>
+            </div>
+            <div class="input-group">
+                <label>Motivo de Ausencia</label>
+                <textarea id="absenceReason" rows="3" placeholder="Ej: Enfermedad, emergencia familiar..."></textarea>
+            </div>
+            <div id="absenceFeedback" class="feedback hidden"></div>
+            <div class="btn-row" style="margin-top: 16px;">
+                <button id="confirmAbsenceBtn" class="btn btn-danger" style="flex: 1;">Confirmar Ausencia</button>
+                <button id="cancelAbsenceBtn" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
