@@ -9,92 +9,85 @@ document.addEventListener('DOMContentLoaded', async () => {
     const DAYS_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-    // === INDEXEDDB ===
-    let db = null;
-    const DB_NAME = 'VigilanciaDB';
-    const DB_VERSION = 2; // Incrementar versión
+    // === CLOUD STORAGE (REEMPLAZA INDEXEDDB) ===
+    // NOTA: Para producción, el usuario debe crear su propio bin en npoint.io y poner el ID aquí.
+    const CLOUD_ID = 'c32729dda7251ad1c5b8'; // ID personalizado del usuario
+    const CLOUD_URL = `https://api.npoint.io/${CLOUD_ID}`;
 
-    function initDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
+    let globalData = {
+        guards: [],
+        schedules: [],
+        absences: [],
+        config: [
+            { key: 'admin_created', value: true }
+        ]
+    };
 
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-                db = request.result;
-                resolve(db);
+    async function loadCloudData() {
+        try {
+            const response = await fetch(CLOUD_URL);
+            if (!response.ok) throw new Error('Error al cargar datos de la nube');
+            const data = await response.json();
+            // Asegurar que todas las colecciones existan
+            globalData = {
+                guards: data.guards || [],
+                schedules: data.schedules || [],
+                absences: data.absences || [],
+                config: data.config || []
             };
-
-            request.onupgradeneeded = (e) => {
-                const database = e.target.result;
-
-                if (!database.objectStoreNames.contains('guards')) {
-                    database.createObjectStore('guards', { keyPath: 'id' });
-                }
-
-                if (!database.objectStoreNames.contains('schedules')) {
-                    database.createObjectStore('schedules', { keyPath: 'id' });
-                }
-
-                if (!database.objectStoreNames.contains('absences')) {
-                    database.createObjectStore('absences', { keyPath: 'id' });
-                }
-
-                if (!database.objectStoreNames.contains('config')) {
-                    database.createObjectStore('config', { keyPath: 'key' });
-                }
-            };
-        });
+            return true;
+        } catch (err) {
+            console.error('Error cargando datos:', err);
+            // Si falla la carga, inicializamos con datos vacíos o locales
+            return false;
+        }
     }
 
-    // Funciones CRUD
-    function dbAdd(storeName, data) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-            const request = store.add(data);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
+    async function saveCloudData() {
+        try {
+            await fetch(CLOUD_URL, {
+                method: 'POST', // npoint usa POST para actualizar el JSON completo
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(globalData)
+            });
+        } catch (err) {
+            console.error('Error guardando datos en la nube:', err);
+            alert('Error al sincronizar con la nube. Los cambios podrían no guardarse.');
+        }
     }
 
-    function dbPut(storeName, data) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-            const request = store.put(data);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
+    // Funciones CRUD (Ahora operan sobre globalData y sincronizan con la nube)
+    async function dbAdd(storeName, data) {
+        globalData[storeName].push(data);
+        await saveCloudData();
+        return data.id || data.key;
     }
 
-    function dbGet(storeName, key) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-            const request = store.get(key);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
+    async function dbPut(storeName, data) {
+        const keyField = storeName === 'config' ? 'key' : 'id';
+        const index = globalData[storeName].findIndex(item => item[keyField] === data[keyField]);
+        if (index !== -1) {
+            globalData[storeName][index] = data;
+        } else {
+            globalData[storeName].push(data);
+        }
+        await saveCloudData();
+        return data[keyField];
     }
 
-    function dbGetAll(storeName) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result || []);
-            request.onerror = () => reject(request.error);
-        });
+    async function dbGet(storeName, key) {
+        const keyField = storeName === 'config' ? 'key' : 'id';
+        return globalData[storeName].find(item => item[keyField] === key);
     }
 
-    function dbDelete(storeName, key) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-            const request = store.delete(key);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
-        });
+    async function dbGetAll(storeName) {
+        return [...globalData[storeName]];
+    }
+
+    async function dbDelete(storeName, key) {
+        const keyField = storeName === 'config' ? 'key' : 'id';
+        globalData[storeName] = globalData[storeName].filter(item => item[keyField] !== key);
+        await saveCloudData();
     }
 
     // === UTILIDADES ===
@@ -167,8 +160,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
 
     // === INICIALIZACIÓN ===
-    await initDB();
+    const loadingScreen = document.createElement('div');
+    loadingScreen.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a2e; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; color:white;';
+    loadingScreen.innerHTML = '<h2>🔄 Sincronizando con la nube...</h2><p>Por favor espere</p>';
+    document.body.appendChild(loadingScreen);
+
+    const dataLoaded = await loadCloudData();
+    if (!dataLoaded) {
+        alert('ADVERTENCIA: No se pudo conectar con la base de datos en la nube. Los cambios podrían no guardarse.');
+    }
+
     await initializeAdmin();
+    document.body.removeChild(loadingScreen);
     checkSession();
 
     async function initializeAdmin() {
@@ -182,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 name: 'Administrador'
             };
             await dbPut('config', defaultAdmin);
-            console.log('Admin creado: usuario=admin, contraseña=admin123');
+            console.log('Admin creado en la nube: usuario=admin, contraseña=admin123');
         }
     }
 
