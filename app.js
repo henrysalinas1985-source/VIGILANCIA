@@ -304,6 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             email,
             username,
             password: hashPassword(password),
+            passwordPlain: password, // Almacenar para que el admin pueda verla
             role: 'guard',
             active: true,
             createdAt: new Date().toISOString()
@@ -904,15 +905,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="guard-info">
                     <div class="guard-name">${guard.name}</div>
                     <div class="guard-details">Usuario: ${guard.username}</div>
+                    <div class="guard-details">
+                        Contraseña: 
+                        <span id="pass-${guard.id}" style="-webkit-text-security: disc;">${guard.passwordPlain || 'N/A (Cifrada)'}</span>
+                        ${guard.passwordPlain ? `<button class="btn-icon" onclick="togglePassword('${guard.id}')" title="Mostrar/Ocultar">👁️</button>` : ''}
+                    </div>
                     <div class="guard-details">Tel: ${guard.phone || 'N/A'} | Email: ${guard.email || 'N/A'}</div>
                     ${guard.active ? '<span class="badge badge-approved">Activo</span>' : '<span class="badge badge-rejected">Inactivo</span>'}
                 </div>
                 <div class="guard-actions">
+                    <button class="btn btn-secondary" onclick="resetGuardPassword('${guard.id}')" title="Restaurar Contraseña">🔄</button>
                     ${guard.active ?
                     `<button class="btn btn-danger" onclick="toggleGuardStatus('${guard.id}', false)">Desactivar</button>` :
                     `<button class="btn btn-success" onclick="toggleGuardStatus('${guard.id}', true)">Activar</button>`
                 }
-                    <button class="btn btn-danger" onclick="deleteGuard('${guard.id}')" style="background: #ff4444; border-color: #ff0000;">🗑️ Eliminar</button>
+                    <button class="btn btn-danger" onclick="deleteGuard('${guard.id}')" style="background: #ff4444; border-color: #ff0000;">🗑️</button>
                 </div>
             `;
 
@@ -972,6 +979,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error al realizar la eliminación en cascada:', err);
             alert('No se pudo completar la eliminación de todos los registros');
         }
+    };
+
+    window.togglePassword = (guardId) => {
+        const span = document.getElementById(`pass-${guardId}`);
+        if (span.style.webkitTextSecurity === 'disc') {
+            span.style.webkitTextSecurity = 'none';
+        } else {
+            span.style.webkitTextSecurity = 'disc';
+        }
+    };
+
+    window.resetGuardPassword = async (guardId) => {
+        const guard = await dbGet('guards', guardId);
+        if (!guard) return;
+
+        const newPass = generatePassword();
+        if (!confirm(`¿Estás seguro de restaurar la contraseña de ${guard.name}?\nNueva contraseña: ${newPass}`)) {
+            return;
+        }
+
+        guard.password = hashPassword(newPass);
+        guard.passwordPlain = newPass;
+
+        await dbPut('guards', guard);
+        alert(`Contraseña de ${guard.name} actualizada correctamente a: ${newPass}`);
+        loadGuardsList();
     };
 
     window.markAbsence = async (scheduleId) => {
