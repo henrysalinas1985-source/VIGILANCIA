@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const username = generateUsername(name);
-        const password = generatePassword();
+        const password = 'Vigilancia'; // Contraseña estándar inicial
 
         const guard = {
             id: generateId('guard'),
@@ -304,7 +304,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             email,
             username,
             password: hashPassword(password),
-            passwordPlain: password, // Almacenar para que el admin pueda verla
             role: 'guard',
             active: true,
             createdAt: new Date().toISOString()
@@ -905,11 +904,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="guard-info">
                     <div class="guard-name">${guard.name}</div>
                     <div class="guard-details">Usuario: ${guard.username}</div>
-                    <div class="guard-details">
-                        Contraseña: 
-                        <span id="pass-${guard.id}" style="-webkit-text-security: disc;">${guard.passwordPlain || 'N/A (Cifrada)'}</span>
-                        ${guard.passwordPlain ? `<button class="btn-icon" onclick="togglePassword('${guard.id}')" title="Mostrar/Ocultar">👁️</button>` : ''}
-                    </div>
+                    <div class="guard-details">Contraseña: ******</div>
                     <div class="guard-details">Tel: ${guard.phone || 'N/A'} | Email: ${guard.email || 'N/A'}</div>
                     ${guard.active ? '<span class="badge badge-approved">Activo</span>' : '<span class="badge badge-rejected">Inactivo</span>'}
                 </div>
@@ -987,29 +982,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    window.togglePassword = (guardId) => {
-        const span = document.getElementById(`pass-${guardId}`);
-        if (span.style.webkitTextSecurity === 'disc') {
-            span.style.webkitTextSecurity = 'none';
-        } else {
-            span.style.webkitTextSecurity = 'disc';
-        }
-    };
-
     window.resetGuardPassword = async (guardId) => {
         const guard = await dbGet('guards', guardId);
         if (!guard) return;
 
-        const newPass = generatePassword();
-        if (!confirm(`¿Estás seguro de restaurar la contraseña de ${guard.name}?\nNueva contraseña: ${newPass}`)) {
+        const newPass = 'Vigilancia';
+        if (!confirm(`¿Estás seguro de restaurar la contraseña de ${guard.name} a la estándar (Vigilancia)?`)) {
             return;
         }
 
         guard.password = hashPassword(newPass);
-        guard.passwordPlain = newPass;
+        if (guard.passwordPlain) delete guard.passwordPlain; // Eliminar si existía
 
         await dbPut('guards', guard);
-        alert(`Contraseña de ${guard.name} actualizada correctamente a: ${newPass}`);
+        alert(`Contraseña de ${guard.name} restaurada a: ${newPass}`);
         loadGuardsList();
     };
 
