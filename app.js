@@ -960,6 +960,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        const safetyCode = prompt('Ingrese el código de seguridad para eliminar (001):');
+        if (safetyCode !== '001') {
+            alert('Código de seguridad incorrecto. Operación cancelada.');
+            return;
+        }
+
         try {
             // 1. Eliminar horarios asociados
             globalData.schedules = globalData.schedules.filter(s => s.guardId !== guardId);
