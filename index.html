@@ -19,6 +19,8 @@
             min-height: 100vh;
             color: #fff;
             padding: 20px;
+            overflow-x: hidden;
+            /* Evita desplazamiento lateral innecesario */
         }
 
         .container {
@@ -323,6 +325,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            /* Permite que los elementos se apilen en pantallas pequeñas */
         }
 
         .guard-info {
@@ -343,6 +348,8 @@
         .guard-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+            /* Los botones se acomodan si no hay espacio */
         }
 
         .badge {
@@ -516,7 +523,7 @@
 <body>
     <!-- Pantalla de Login -->
     <div id="loginView" class="container">
-        <h1>🛡️ Sistema de Turnos de Vigilancia</h1>
+        <h1>🛡️ Sistema de Turnos de Hermanos</h1>
         <p class="subtitle">Gestión inteligente de horarios</p>
 
         <div class="card" style="max-width: 400px; margin: 0 auto;">
@@ -534,9 +541,9 @@
         </div>
     </div>
 
-    <!-- Vista de Vigilante -->
+    <!-- Vista de Hermano -->
     <div id="guardView" class="container hidden">
-        <h1>🛡️ Panel de Vigilante</h1>
+        <h1>🛡️ Panel de Hermano</h1>
         <p class="subtitle">Bienvenido, <span id="guardNameDisplay"></span></p>
 
         <div class="btn-row" style="margin-bottom: 20px;">
@@ -544,7 +551,7 @@
             <button id="logoutGuardBtn" class="btn btn-secondary">Cerrar Sesión</button>
         </div>
 
-        <!-- Estadísticas del Vigilante -->
+        <!-- Estadísticas del Hermano -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="guardTurnosThisWeek">0</div>
@@ -605,7 +612,7 @@
         <p class="subtitle">Gestión completa del sistema</p>
 
         <div class="btn-row" style="margin-bottom: 20px;">
-            <button id="showRegisterGuardBtn" class="btn btn-primary">➕ Registrar Vigilante</button>
+            <button id="showRegisterGuardBtn" class="btn btn-primary">➕ Registrar Hermano</button>
             <button id="logoutAdminBtn" class="btn btn-secondary">Cerrar Sesión</button>
         </div>
 
@@ -613,7 +620,7 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="totalGuards">0</div>
-                <div class="stat-label">Vigilantes Activos</div>
+                <div class="stat-label">Hermanos Activos</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="pendingSchedules">0</div>
@@ -651,19 +658,19 @@
             </div>
         </div>
 
-        <!-- Lista de Vigilantes -->
+        <!-- Lista de Hermanos -->
         <div class="card">
-            <h2>👥 Vigilantes Registrados</h2>
+            <h2>👥 Hermanos Registrados</h2>
             <div id="guardsList" class="guard-list">
-                <p style="color: #888; text-align: center;">No hay vigilantes registrados</p>
+                <p style="color: #888; text-align: center;">No hay hermanos registrados</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Registrar Vigilante -->
+    <!-- Modal: Registrar Hermano -->
     <div id="registerGuardModal" class="modal-overlay hidden">
         <div class="modal">
-            <h3>➕ Registrar Nuevo Vigilante</h3>
+            <h3>➕ Registrar Nuevo Hermano</h3>
             <div class="input-group">
                 <label>Nombre Completo</label>
                 <input type="text" id="regGuardName" placeholder="Ej: Juan Pérez">
@@ -683,7 +690,7 @@
                 Contraseña: <span id="generatedPassword"></span><br>
                 <button id="copyCredentialsBtn" class="btn btn-secondary"
                     style="padding: 4px 8px; font-size: 0.8rem; margin-top: 8px;">📋 Copiar Información</button><br>
-                <small>Guarda estas credenciales para compartir con el vigilante</small>
+                <small>Guarda estas credenciales para compartir con el hermano</small>
             </div>
             <div class="btn-row" style="margin-top: 16px;">
                 <button id="confirmRegGuardBtn" class="btn btn-success" style="flex: 1;">Guardar</button>

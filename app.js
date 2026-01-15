@@ -316,14 +316,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('generatedPassword').textContent = password;
             document.getElementById('credentialsDisplay').classList.remove('hidden');
 
-            showFeedback(document.getElementById('regGuardFeedback'), 'Vigilante registrado exitosamente', 'success');
+            showFeedback(document.getElementById('regGuardFeedback'), 'Hermano registrado exitosamente', 'success');
 
             setTimeout(() => {
                 registerGuardModal.classList.add('hidden');
                 loadAdminDashboard();
             }, 3000);
         } catch (err) {
-            showFeedback(document.getElementById('regGuardFeedback'), 'Error al registrar vigilante', 'error');
+            showFeedback(document.getElementById('regGuardFeedback'), 'Error al registrar hermano', 'error');
         }
     });
 
@@ -413,8 +413,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mySchedules = schedules.filter(s => s.guardId === currentUser.id);
         const myApprovedSchedules = mySchedules.filter(s => s.status === 'approved');
 
-        const thisMonthSchedule = myApprovedSchedules.find(s => s.month === currentMonth && s.year === currentYear);
-        const thisMonthShifts = thisMonthSchedule ? Object.values(thisMonthSchedule.shifts).filter(s => s).length : 0;
+        const currentMonthSchedules = myApprovedSchedules.filter(s => s.month === currentMonth && s.year === currentYear);
+        const thisMonthShifts = currentMonthSchedules.reduce((sum, s) => sum + Object.values(s.shifts).filter(sh => sh).length, 0);
 
         document.getElementById('guardTurnosThisWeek').textContent = thisMonthShifts;
         document.getElementById('guardTurnosTotal').textContent = myApprovedSchedules.reduce((sum, s) =>
@@ -890,7 +890,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const container = document.getElementById('guardsList');
 
         if (guards.length === 0) {
-            container.innerHTML = '<p style="color: #888; text-align: center;">No hay vigilantes registrados</p>';
+            container.innerHTML = '<p style="color: #888; text-align: center;">No hay hermanos registrados</p>';
             return;
         }
 
@@ -931,7 +931,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.rejectSchedule = async (scheduleId) => {
-        if (!confirm('¿Rechazar este horario? El vigilante deberá volver a registrarse.')) {
+        if (!confirm('¿Rechazar este horario? El hermano deberá volver a registrarse.')) {
             return;
         }
         await dbDelete('schedules', scheduleId);
@@ -949,7 +949,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const guard = await dbGet('guards', guardId);
         if (!guard) return;
 
-        if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al vigilante ${guard.name}? Esta acción no se puede deshacer y borrará TODOS sus horarios y reportes asociados.`)) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al hermano ${guard.name}? Esta acción no se puede deshacer y borrará TODOS sus horarios y reportes asociados.`)) {
             return;
         }
 
@@ -960,13 +960,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 2. Eliminar ausencias asociadas (tanto las reportadas por él como las asociadas a sus horarios)
             globalData.absences = globalData.absences.filter(a => a.guardId !== guardId);
 
-            // 3. Eliminar al vigilante de la lista principal
+            // 3. Eliminar al hermano de la lista principal
             globalData.guards = globalData.guards.filter(g => g.id !== guardId);
 
             // 4. Sincronizar todos los cambios con la nube
             await saveCloudData();
 
-            alert('Vigilante y todos sus registros asociados han sido eliminados correctamente');
+            alert('Hermano y todos sus registros asociados han sido eliminados correctamente');
             loadAdminDashboard();
         } catch (err) {
             console.error('Error al realizar la eliminación en cascada:', err);
@@ -979,7 +979,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const absenceInfo = document.getElementById('absenceInfo');
         absenceInfo.innerHTML = `
-            <strong>Vigilante:</strong> ${schedule.guardName}<br>
+            <strong>Hermano:</strong> ${schedule.guardName}<br>
             <strong>Mes:</strong> ${MONTHS[schedule.month]} ${schedule.year}
         `;
 
